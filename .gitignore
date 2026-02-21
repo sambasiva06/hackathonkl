@@ -1,0 +1,32 @@
+# Java / Maven
+backend/target/
+backend/*.jar
+backend/*.war
+backend/.factorypath
+backend/.project
+backend/.classpath
+backend/.settings/
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr
+frontend/*.local
+frontend/.vite/
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.log
+*.tmp
+*.bak
+
+# Spring Boot
+backend/help.md
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+
+# DS_Store (macOS)
+.DS_Store
