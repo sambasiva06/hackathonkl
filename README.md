@@ -12,7 +12,7 @@ AyurSutra is a full-stack healthcare MVP designed to digitize manual clinic work
 ### 1. Database & H2 Console
 - The application uses an **H2 In-Memory Database**. 
 - It resets EVERY time you restart the backend (Perfect for clean hackathon demos).
-- You can access the H2 Web Console at: `http://localhost:8080/h2-console`
+- You can access the H2 Web Console at: `http://localhost:8081/h2-console`
 - **JDBC URL**: `jdbc:h2:mem:ayursutra`
 - **User**: `sa` | **Password**: `password`
 
@@ -21,7 +21,7 @@ AyurSutra is a full-stack healthcare MVP designed to digitize manual clinic work
 cd backend
 mvn spring-boot:run
 ```
-- API will be available at: `http://localhost:8080`
+- API will be available at: `http://localhost:8081`
 
 ### 3. Frontend (React + Vite)
 ```bash
