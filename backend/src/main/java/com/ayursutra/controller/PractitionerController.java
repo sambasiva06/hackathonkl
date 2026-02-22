@@ -2,6 +2,7 @@ package com.ayursutra.controller;
 
 import com.ayursutra.dto.*;
 import com.ayursutra.security.JwtUtil;
+import com.ayursutra.security.SecurityUtil;
 import com.ayursutra.service.PractitionerService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -34,7 +35,7 @@ public class PractitionerController {
 
     @GetMapping("/patients")
     public ResponseEntity<List<PatientProfileResponse>> getAllPatients() {
-        return ResponseEntity.ok(practitionerService.getAllPatients());
+        return ResponseEntity.ok(practitionerService.getAllPatients(SecurityUtil.getCurrentUserId()));
     }
 
     @PostMapping("/therapy-plan")
@@ -69,6 +70,15 @@ public class PractitionerController {
     public ResponseEntity<List<FeedbackResponse>> getAllFeedback(HttpServletRequest httpRequest) {
         Long practitionerId = extractUserId(httpRequest);
         return ResponseEntity.ok(practitionerService.getAllFeedback(practitionerId));
+    }
+
+    @PutMapping("/session/{sessionId}/status")
+    public ResponseEntity<TherapySessionResponse> updateSessionStatus(
+            @PathVariable Long sessionId,
+            @RequestParam com.ayursutra.model.enums.SessionStatus status,
+            HttpServletRequest httpRequest) {
+        Long practitionerId = extractUserId(httpRequest);
+        return ResponseEntity.ok(practitionerService.updateSessionStatus(sessionId, status, practitionerId));
     }
 
     private Long extractUserId(HttpServletRequest request) {

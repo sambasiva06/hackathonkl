@@ -40,11 +40,13 @@ export const practitionerService = {
     createTherapyPlan: (planData) => api.post('/api/therapy-plan', planData),
     getTherapyPlans: () => api.get('/api/therapy-plans'),
     scheduleSession: (sessionData) => api.post('/api/session', sessionData),
+    updateSessionStatus: (sessionId, status) => api.put(`/api/session/${sessionId}/status?status=${status}`),
     getFeedback: () => api.get('/api/feedback'),
 };
 
 export const patientService = {
     getMySessions: () => api.get('/api/my-sessions'),
+    getNotifications: () => api.get('/api/notifications'),
     submitFeedback: (feedbackData) => api.post('/api/feedback', feedbackData),
     getTherapyProgress: () => api.get('/api/therapy-progress'),
     getMyProfile: () => api.get('/api/my-profile'),

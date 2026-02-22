@@ -6,7 +6,7 @@ import {
   Calendar,
   ClipboardList,
   MessageSquare,
-  UserCircle,
+  User,
   LogOut,
   Leaf
 } from 'lucide-react';
@@ -32,18 +32,20 @@ const Sidebar = ({ closeMenu }) => {
     { name: 'Schedule', path: '/schedule', icon: Calendar },
     { name: 'Feedback', path: '/feedback', icon: MessageSquare },
   ] : [
-    { name: 'My Timeline', path: '/timeline', icon: Calendar },
-    { name: 'Session Details', path: '/sessions', icon: ClipboardList },
-    { name: 'Submit Feedback', path: '/submit-feedback', icon: MessageSquare },
-    { name: 'Profile', path: '/profile', icon: UserCircle },
+    { name: 'Dashboard', path: '/patient-dashboard', icon: LayoutDashboard },
+    { name: 'Profile', path: '/profile', icon: User },
+    { name: 'Feedback', path: '/submit-feedback', icon: MessageSquare },
+    { name: 'Reports', path: '/timeline', icon: ClipboardList },
   ];
 
   return (
     <aside className="sidebar">
       <button className="mobile-close" onClick={closeMenu}>×</button>
-      <div className="sidebar-brand">
-        <Leaf className="brand-icon" size={32} />
-        <span className="brand-name">AyurSutra</span>
+      <div className="sidebar-logo">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Leaf size={24} color="var(--primary)" />
+          <h2>AyurSutra</h2>
+        </div>
       </div>
 
       <div className="user-profile-mini">
@@ -52,7 +54,7 @@ const Sidebar = ({ closeMenu }) => {
         </div>
         <div className="user-info">
           <p className="user-name">{user?.name}</p>
-          <p className="user-role">{user?.role}</p>
+          <p className="user-role">{user?.role?.toLowerCase()}</p>
         </div>
       </div>
 
@@ -77,121 +79,136 @@ const Sidebar = ({ closeMenu }) => {
 
       <style>{`
         .sidebar {
-          width: var(--sidebar-width);
-          background-color: var(--bg-sidebar);
-          color: var(--text-on-dark);
-          display: flex;
-          flex-direction: column;
-          padding: 1.5rem;
-          height: 100vh;
-          position: sticky;
-          top: 0;
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+            box-shadow: 1px 0 0 var(--border);
         }
 
-        .sidebar-brand {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          margin-bottom: 2.5rem;
-          padding-left: 0.5rem;
+        .sidebar-logo {
+            margin-bottom: 2rem;
+            padding: 0.5rem;
         }
 
-        .brand-icon {
-          color: var(--secondary);
-        }
-
-        .brand-name {
-          font-size: 1.5rem;
-          font-weight: 700;
-          letter-spacing: -0.025em;
+        .sidebar-logo h2 {
+            color: var(--text-main);
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
         }
 
         .user-profile-mini {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 1rem;
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: var(--radius);
-          margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
         }
 
         .avatar {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: var(--primary);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 700;
-          font-size: 1.125rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
         }
 
         .user-name {
-          font-size: 0.875rem;
-          font-weight: 600;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-main);
         }
 
         .user-role {
-          font-size: 0.75rem;
-          color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin: 0;
+            text-transform: capitalize;
         }
 
         .sidebar-nav {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            flex: 1;
         }
 
         .nav-link {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.75rem 1rem;
-          border-radius: 0.5rem;
-          color: rgba(255, 255, 255, 0.7);
-          transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-weight: 500;
         }
 
         .nav-link:hover {
-          background: rgba(255, 255, 255, 0.1);
-          color: white;
+            color: var(--primary);
+            background: #f1f5f9;
         }
 
         .nav-link.active {
-          background: var(--primary);
-          color: white;
+            background: #f0fdfa;
+            color: var(--primary);
+            font-weight: 700;
         }
 
         .logout-btn {
-          margin-top: auto;
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.75rem 1rem;
-          border-radius: 0.5rem;
-          color: #fca5a5;
-          width: 100%;
-          text-align: left;
-          transition: background 0.2s;
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            color: #ef4444;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            border-radius: var(--radius);
+            transition: all 0.2s;
+            font-weight: 600;
         }
 
         .logout-btn:hover {
-          background: rgba(239, 68, 68, 0.1);
+            background: #fef2f2;
         }
+
         .mobile-close {
-          display: none;
-          position: absolute;
-          top: 1rem;
-          right: 1rem;
-          font-size: 2rem;
-          color: rgba(255, 255, 255, 0.5);
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 2rem;
+            cursor: pointer;
         }
 
         @media (max-width: 1024px) {
-          .mobile-close { display: block; }
+            .mobile-close {
+                display: block;
+                position: absolute;
+                top: 1rem;
+                right: 1rem;
+            }
         }
       `}</style>
     </aside>

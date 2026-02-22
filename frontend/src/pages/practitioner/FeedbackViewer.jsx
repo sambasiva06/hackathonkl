@@ -3,57 +3,57 @@ import { Star, MessageSquare } from 'lucide-react';
 import { practitionerService } from '../../services/api';
 
 const FeedbackViewer = () => {
-    const [feedbacks, setFeedbacks] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        document.title = 'Patient Feedback — AyurSutra';
-        practitionerService.getFeedback().then(res => {
-            setFeedbacks(res.data);
-            setLoading(false);
-        });
-    }, []);
+  useEffect(() => {
+    document.title = 'Patient Feedback — AyurSutra';
+    practitionerService.getFeedback().then(res => {
+      setFeedbacks(res.data);
+      setLoading(false);
+    });
+  }, []);
 
-    if (loading) return <div className="loading">Reflecting...</div>;
+  if (loading) return <div className="loading">Reflecting...</div>;
 
-    return (
-        <div className="feedback-page fade-in">
-            <div className="feedback-grid">
-                {feedbacks.length > 0 ? feedbacks.map((fb) => (
-                    <div key={fb.id} className="feedback-card">
-                        <div className="fb-header">
-                            <div className="fb-patient">
-                                <div className="fb-avatar">{fb.patientName[0]}</div>
-                                <div>
-                                    <h4>{fb.patientName}</h4>
-                                    <p>{fb.procedureName}</p>
-                                </div>
-                            </div>
-                            <div className="fb-rating">
-                                {[...Array(5)].map((_, i) => (
-                                    <Star
-                                        key={i}
-                                        size={16}
-                                        fill={i < fb.rating ? '#f59e0b' : 'none'}
-                                        color={i < fb.rating ? '#f59e0b' : '#d1d5db'}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                        <div className="fb-body">
-                            <MessageSquare size={14} className="quote-icon" />
-                            <p>{fb.message}</p>
-                        </div>
-                        <div className="fb-footer">
-                            <span>{new Date(fb.createdAt).toLocaleDateString()}</span>
-                        </div>
-                    </div>
-                )) : (
-                    <div className="empty-state">No feedback submitted yet.</div>
-                )}
+  return (
+    <div className="feedback-page fade-in">
+      <div className="feedback-grid">
+        {feedbacks.length > 0 ? feedbacks.map((fb) => (
+          <div key={fb.id} className="feedback-card">
+            <div className="fb-header">
+              <div className="fb-patient">
+                <div className="fb-avatar">{fb?.patientName?.[0] || '?'}</div>
+                <div>
+                  <h4>{fb?.patientName || 'Anonymous'}</h4>
+                  <p>{fb?.procedureName || 'General Therapy'}</p>
+                </div>
+              </div>
+              <div className="fb-rating">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    size={16}
+                    fill={i < fb.rating ? '#f59e0b' : 'none'}
+                    color={i < fb.rating ? '#f59e0b' : '#d1d5db'}
+                  />
+                ))}
+              </div>
             </div>
+            <div className="fb-body">
+              <MessageSquare size={14} className="quote-icon" />
+              <p>{fb.message}</p>
+            </div>
+            <div className="fb-footer">
+              <span>{new Date(fb.createdAt).toLocaleDateString()}</span>
+            </div>
+          </div>
+        )) : (
+          <div className="empty-state">No feedback submitted yet.</div>
+        )}
+      </div>
 
-            <style>{`
+      <style>{`
         .feedback-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -125,8 +125,8 @@ const FeedbackViewer = () => {
           text-align: right;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default FeedbackViewer;

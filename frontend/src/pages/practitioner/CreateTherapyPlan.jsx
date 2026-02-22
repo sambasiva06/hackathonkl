@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ClipboardList, Sparkles } from 'lucide-react';
+import { ClipboardList, Sparkles, ArrowLeft } from 'lucide-react';
 import { practitionerService } from '../../services/api';
 
 const CreateTherapyPlan = () => {
@@ -19,11 +19,14 @@ const CreateTherapyPlan = () => {
     useEffect(() => {
         document.title = 'Create Therapy Plan — AyurSutra';
         practitionerService.getPatients().then(res => {
-            setPatients(res.data);
-            // If patientId passed in navigation state, select it
-            if (location.state?.patientId) {
-                setFormData(prev => ({ ...prev, patientId: location.state.patientId }));
+            setPatients(Array.isArray(res?.data) ? res.data : []);
+            const targetId = location.state?.patientId;
+            if (targetId) {
+                setFormData(prev => ({ ...prev, patientId: targetId.toString() }));
             }
+        }).catch(err => {
+            console.error('Error fetching patients:', err);
+            setPatients([]);
         });
     }, [location.state]);
 
@@ -42,51 +45,55 @@ const CreateTherapyPlan = () => {
 
     return (
         <div className="create-plan-page fade-in">
-            <div className="glass-card" style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <button className="btn btn-ghost btn-sm back-link" onClick={() => navigate(-1)}>
+                <ArrowLeft size={16} /> Back to Directory
+            </button>
+
+            <div className="form-container clean-card" style={{ maxWidth: '800px', margin: '1rem auto' }}>
                 <div className="form-header">
-                    <div className="icon-circle"><ClipboardList size={24} /></div>
-                    <h3>Initiate Panchakarma Journey</h3>
-                    <p>Define the therapy phase and duration for your patient.</p>
+                    <div className="icon-circle"><ClipboardList size={22} /></div>
+                    <h3>Initialize Therapy Plan</h3>
+                    <p>Establish clinical goals and timelines for the patient's Panchakarma journey.</p>
                 </div>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} className="standard-form">
                     <div className="form-grid">
                         <div className="input-group">
-                            <label>Select Patient</label>
+                            <label>Patient Profile</label>
                             <select
                                 required
                                 value={formData.patientId}
                                 onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
                             >
-                                <option value="">Choose a patient...</option>
-                                {patients.map(p => <option key={p.userId} value={p.userId}>{p.name}</option>)}
+                                <option value="">Select a patient...</option>
+                                {patients?.map(p => <option key={p.userId || p.id} value={p.userId || p.id}>{p.name || 'Unknown Patient'}</option>)}
                             </select>
                         </div>
 
                         <div className="input-group">
-                            <label>Therapy Phase</label>
+                            <label>Therapeutic Phase</label>
                             <select
                                 value={formData.phase}
                                 onChange={(e) => setFormData({ ...formData, phase: e.target.value })}
                             >
-                                <option value="PURVAKARMA">Purvakarma (Preparation)</option>
-                                <option value="PRADHANAKARMA">Pradhanakarma (Main Therapy)</option>
-                                <option value="PASCHATKARMA">Paschatkarma (Post-Therapy)</option>
+                                <option value="PURVAKARMA">Purvakarma (Preliminary)</option>
+                                <option value="PRADHANAKARMA">Pradhanakarma (Core)</option>
+                                <option value="PASCHATKARMA">Paschatkarma (Follow-up)</option>
                             </select>
                         </div>
 
                         <div className="input-group full">
-                            <label>Therapy Description & Goals</label>
+                            <label>Clinical Description & Goals</label>
                             <textarea
-                                rows="4"
-                                placeholder="Describe the clinical goals for this phase..."
+                                rows="5"
+                                placeholder="Outline the specific procedures, dietary constraints, and clinical objectives for this phase..."
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             ></textarea>
                         </div>
 
                         <div className="input-group">
-                            <label>Start Date</label>
+                            <label>Commencement Date</label>
                             <input
                                 type="date"
                                 required
@@ -96,7 +103,7 @@ const CreateTherapyPlan = () => {
                         </div>
 
                         <div className="input-group">
-                            <label>End Date (Optional)</label>
+                            <label>Estimated Conclusion</label>
                             <input
                                 type="date"
                                 value={formData.endDate}
@@ -105,11 +112,11 @@ const CreateTherapyPlan = () => {
                         </div>
                     </div>
 
-                    <div className="form-footer" style={{ marginTop: '2rem' }}>
+                    <div className="form-actions">
                         <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-                            {loading ? 'Creating Plan...' : (
+                            {loading ? 'Processing...' : (
                                 <>
-                                    <Sparkles size={18} /> Initialize Therapy Plan
+                                    <Sparkles size={18} /> Activate Therapy Phase
                                 </>
                             )}
                         </button>
@@ -118,33 +125,82 @@ const CreateTherapyPlan = () => {
             </div>
 
             <style>{`
-        .form-header {
-          text-align: center;
-          margin-bottom: 2.5rem;
-        }
-        
-        .icon-circle {
-          width: 56px;
-          height: 56px;
-          border-radius: 50%;
-          background: rgba(13, 148, 136, 0.1);
-          color: var(--primary);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 1rem;
-        }
-
-        .form-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1.5rem;
-        }
-
-        .input-group.full {
-          grid-column: span 2;
-        }
-      `}</style>
+                .create-plan-page {
+                    padding-bottom: 2rem;
+                }
+                .back-link {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    margin-bottom: 1.5rem;
+                    font-weight: 700;
+                }
+                .form-container {
+                    padding: 3rem;
+                    border: 1px solid var(--border);
+                }
+                .form-header {
+                    text-align: center;
+                    margin-bottom: 3rem;
+                }
+                .form-header h3 {
+                    font-size: 1.5rem;
+                    font-weight: 800;
+                    margin-bottom: 0.5rem;
+                    color: var(--text-main);
+                }
+                .form-header p {
+                    color: var(--text-muted);
+                    font-size: 0.95rem;
+                }
+                .icon-circle {
+                    width: 52px;
+                    height: 52px;
+                    border-radius: 12px;
+                    background: #f0fdfa;
+                    color: var(--primary);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 1.25rem;
+                    border: 1px solid #ccfbf1;
+                }
+                .form-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 1.5rem 2rem;
+                }
+                .input-group.full {
+                    grid-column: span 2;
+                }
+                .input-group label {
+                    display: block;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    color: var(--text-muted);
+                    margin-bottom: 0.5rem;
+                    letter-spacing: 0.025em;
+                }
+                .input-group input, .input-group select, .input-group textarea {
+                    width: 100%;
+                    padding: 0.75rem 1rem;
+                    border: 1px solid var(--border);
+                    border-radius: 8px;
+                    font-size: 0.95rem;
+                    outline: none;
+                    background: #fcfcfc;
+                    transition: all 0.2s;
+                }
+                .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+                    border-color: var(--primary);
+                    background: white;
+                    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+                }
+                .form-actions {
+                    margin-top: 2.5rem;
+                }
+            `}</style>
         </div>
     );
 };

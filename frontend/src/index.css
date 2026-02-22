@@ -1,26 +1,26 @@
 :root {
   --primary: #0d9488;
-  /* Teal 600 */
+  /* Modern Teal */
   --primary-hover: #0f766e;
-  --secondary: #10b981;
-  /* Emerald 500 */
-  --accent: #8b5cf6;
-  /* Violet 500 */
+  --secondary: #f59e0b;
+  /* Amber accent */
+  --accent: #6366f1;
 
   --bg-main: #f8fafc;
   --bg-card: #ffffff;
-  --bg-sidebar: #0f172a;
-  /* Slate 900 */
+  --bg-sidebar: #ffffff;
 
-  --text-main: #1e293b;
+  --text-main: #0f172a;
   --text-muted: #64748b;
-  --text-on-dark: #f8fafc;
+  --text-on-dark: #0f172a;
+  /* Now on light sidebar */
 
-  --border: #e2e8f0;
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --border: #f1f5f9;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.04), 0 4px 6px -4px rgb(0 0 0 / 0.04);
 
-  --radius: 0.75rem;
+  --radius: 12px;
   --sidebar-width: 260px;
 }
 
@@ -67,12 +67,12 @@ button {
   padding: 1.5rem;
 }
 
+/* Clean Card (Blinkit Style) */
 .glass-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow);
   padding: 2.5rem;
   width: 100%;
   max-width: 440px;
@@ -218,7 +218,22 @@ button {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--bg-sidebar);
+  color: var(--text-on-dark);
+  border-right: none;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar h2 {
+  color: var(--primary);
+  font-size: 1.5rem;
+  padding: 1rem 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
 .loading-container {

@@ -47,6 +47,33 @@ public class NotificationService {
         saveAndLog(user, subject, body);
     }
 
+    public void sendPreProcedureInstructions(User patient, String procedureName) {
+        String subject = "🥗 Pre-Procedure Instructions: " + procedureName;
+        String body = String.format(
+                "Dear %s,\n\nPreparation is key for a successful '%s' session.\n" +
+                "1. Please fast for at least 4 hours before the procedure.\n" +
+                "2. Avoid strenuous physical activity 24 hours prior.\n" +
+                "3. Keep yourself well hydrated with warm water.\n\n" +
+                "We look forward to seeing you.\n\nBest regards,\nAyurSutra Team",
+                patient.getName(), procedureName
+        );
+        saveAndLog(patient, subject, body);
+    }
+
+    public void sendPostProcedureTips(User patient, String procedureName) {
+        String subject = "🧘 Post-Procedure Recovery: " + procedureName;
+        String body = String.format(
+                "Dear %s,\n\nYou have successfully completed your '%s' session.\n" +
+                "Recovery Tips:\n" +
+                "- Rest for at least 2 hours in a quiet environment.\n" +
+                "- Avoid direct exposure to cold wind or sun.\n" +
+                "- Consume light, warm meals (like Khichdi) for the next 48 hours.\n\n" +
+                "Warm regards,\nAyurSutra Team",
+                patient.getName(), procedureName
+        );
+        saveAndLog(patient, subject, body);
+    }
+
     private void saveAndLog(User user, String subject, String body) {
         Notification notification = Notification.builder()
                 .user(user)

@@ -21,6 +21,6 @@ public interface TherapySessionRepository extends JpaRepository<TherapySession, 
     @Query("SELECT s FROM TherapySession s WHERE s.therapyPlan.practitioner.id = :practitionerId ORDER BY s.scheduledDate ASC")
     List<TherapySession> findByPractitionerId(@Param("practitionerId") Long practitionerId);
 
-    @Query("SELECT s FROM TherapySession s WHERE s.scheduledDate BETWEEN :start AND :end AND s.status = 'SCHEDULED'")
-    List<TherapySession> findUpcomingSessions(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    @Query("SELECT s FROM TherapySession s WHERE s.therapyPlan.practitioner.id = :practitionerId AND s.scheduledDate BETWEEN :start AND :end AND s.status = 'SCHEDULED'")
+    List<TherapySession> findConflictingSessions(@Param("practitionerId") Long practitionerId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

@@ -4,32 +4,32 @@ import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
 
 const DashboardLayout = () => {
-    const { user } = useAuth();
-    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const { user } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
-    if (!user) {
-        return <Navigate to="/login" />;
-    }
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
 
-    return (
-        <div className={`dashboard-layout ${isMenuOpen ? 'menu-open' : ''}`}>
-            <div className="mobile-overlay" onClick={() => setIsMenuOpen(false)}></div>
-            <Sidebar closeMenu={() => setIsMenuOpen(false)} />
-            <main className="main-content">
-                <header className="content-header">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <button className="menu-toggle" onClick={() => setIsMenuOpen(true)}>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-                        </button>
-                        <h2>{document.title.split('—')[0]}</h2>
-                    </div>
-                </header>
-                <div className="fade-in">
-                    <Outlet />
-                </div>
-            </main>
+  return (
+    <div className={`dashboard-layout ${isMenuOpen ? 'menu-open' : ''}`}>
+      <div className="mobile-overlay" onClick={() => setIsMenuOpen(false)}></div>
+      <Sidebar closeMenu={() => setIsMenuOpen(false)} />
+      <main className="main-content">
+        <header className="content-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <button className="menu-toggle" onClick={() => setIsMenuOpen(true)}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <h1 className="header-title">{document.title.split('—')[0]}</h1>
+          </div>
+        </header>
+        <div className="fade-in">
+          <Outlet />
+        </div>
+      </main>
 
-            <style>{`
+      <style>{`
         .menu-toggle { display: none; color: var(--text-main); }
         .mobile-overlay { display: none; }
 
@@ -54,23 +54,27 @@ const DashboardLayout = () => {
           .main-content { padding: 1.5rem; }
         }
 
+        .header-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #064e3b;
+          margin: 0;
+        }
+
         .content-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           margin-bottom: 2rem;
-          padding-bottom: 1rem;
-          border-bottom: 1px solid var(--border);
-        }
-
-        .content-header h2 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: var(--text-main);
+          padding: 1rem 0;
+          position: sticky;
+          top: 0;
+          background: var(--bg-main);
+          z-index: 10;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default DashboardLayout;

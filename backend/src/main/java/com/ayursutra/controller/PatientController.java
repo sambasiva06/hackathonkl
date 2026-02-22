@@ -50,6 +50,12 @@ public class PatientController {
         return ResponseEntity.ok(patientService.getMyProfile(patientId));
     }
 
+    @GetMapping("/notifications")
+    public ResponseEntity<List<NotificationResponse>> getNotifications(HttpServletRequest httpRequest) {
+        Long patientId = extractUserId(httpRequest);
+        return ResponseEntity.ok(patientService.getMyNotifications(patientId));
+    }
+
     private Long extractUserId(HttpServletRequest request) {
         String token = request.getHeader("Authorization").substring(7);
         return jwtUtil.extractUserId(token);

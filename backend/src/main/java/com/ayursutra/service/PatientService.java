@@ -20,6 +20,7 @@ public class PatientService {
     private final TherapyPlanRepository therapyPlanRepository;
     private final TherapySessionRepository therapySessionRepository;
     private final FeedbackRepository feedbackRepository;
+    private final NotificationRepository notificationRepository;
     private final NotificationService notificationService;
 
     public PatientService(UserRepository userRepository,
@@ -27,12 +28,14 @@ public class PatientService {
                           TherapyPlanRepository therapyPlanRepository,
                           TherapySessionRepository therapySessionRepository,
                           FeedbackRepository feedbackRepository,
+                          NotificationRepository notificationRepository,
                           NotificationService notificationService) {
         this.userRepository = userRepository;
         this.patientProfileRepository = patientProfileRepository;
         this.therapyPlanRepository = therapyPlanRepository;
         this.therapySessionRepository = therapySessionRepository;
         this.feedbackRepository = feedbackRepository;
+        this.notificationRepository = notificationRepository;
         this.notificationService = notificationService;
     }
 
@@ -66,6 +69,9 @@ public class PatientService {
                 .patient(patient)
                 .message(request.getMessage())
                 .rating(request.getRating())
+                .symptoms(request.getSymptoms())
+                .sideEffects(request.getSideEffects())
+                .improvementLevel(request.getImprovementLevel())
                 .build();
 
         feedback = feedbackRepository.save(feedback);
@@ -120,6 +126,18 @@ public class PatientService {
                 .build();
     }
 
+    public List<NotificationResponse> getMyNotifications(Long userId) {
+        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(n -> NotificationResponse.builder()
+                        .id(n.getId())
+                        .subject(n.getSubject())
+                        .body(n.getBody())
+                        .sent(n.isSent())
+                        .createdAt(n.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
     // =========== Mappers ===========
 
     private TherapySessionResponse toSessionResponse(TherapySession session) {
@@ -149,6 +167,9 @@ public class PatientService {
                 .patientName(feedback.getPatient().getName())
                 .message(feedback.getMessage())
                 .rating(feedback.getRating())
+                .symptoms(feedback.getSymptoms())
+                .sideEffects(feedback.getSideEffects())
+                .improvementLevel(feedback.getImprovementLevel())
                 .createdAt(feedback.getCreatedAt())
                 .build();
     }

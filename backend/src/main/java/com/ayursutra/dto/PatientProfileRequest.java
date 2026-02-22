@@ -18,6 +18,11 @@ public class PatientProfileRequest {
     @NotBlank(message = "Password is required")
     private String password;
 
+    private Integer age;
+    private String gender;
+    private String bloodGroup;
+    private String emergencyContact;
+    private String medicalHistory;
     private String prakriti;
     private String notes;
 }

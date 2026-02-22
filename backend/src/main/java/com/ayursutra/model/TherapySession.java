@@ -35,4 +35,11 @@ public class TherapySession {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SessionStatus status;
+
+    public Long getId() { return id; }
+    public TherapyPlan getTherapyPlan() { return therapyPlan; }
+    public String getProcedureName() { return procedureName; }
+    public java.time.LocalDateTime getScheduledDate() { return scheduledDate; }
+    public String getNotes() { return notes; }
+    public SessionStatus getStatus() { return status; }
 }

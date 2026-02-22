@@ -55,6 +55,12 @@ public class PractitionerService {
         // Create patient profile
         PatientProfile profile = PatientProfile.builder()
                 .user(patientUser)
+                .practitioner(userRepository.findById(practitionerId).orElse(null))
+                .age(request.getAge())
+                .gender(request.getGender())
+                .bloodGroup(request.getBloodGroup())
+                .emergencyContact(request.getEmergencyContact())
+                .medicalHistory(request.getMedicalHistory())
                 .prakriti(request.getPrakriti())
                 .notes(request.getNotes())
                 .build();
@@ -65,8 +71,8 @@ public class PractitionerService {
         return toPatientProfileResponse(profile);
     }
 
-    public List<PatientProfileResponse> getAllPatients() {
-        return patientProfileRepository.findAll().stream()
+    public List<PatientProfileResponse> getAllPatients(Long practitionerId) {
+        return patientProfileRepository.findByPractitionerId(practitionerId).stream()
                 .map(this::toPatientProfileResponse)
                 .collect(Collectors.toList());
     }
@@ -99,6 +105,19 @@ public class PractitionerService {
             throw new BadRequestException("You can only schedule sessions for your own therapy plans");
         }
 
+        // Conflict Detection: Check for sessions within 60 minutes of the proposed time
+        LocalDateTime proposedTime = request.getScheduledDate();
+        LocalDateTime bufferStart = proposedTime.minusMinutes(59);
+        LocalDateTime bufferEnd = proposedTime.plusMinutes(59);
+
+        List<TherapySession> conflicts = therapySessionRepository.findConflictingSessions(practitionerId, bufferStart, bufferEnd);
+        if (!conflicts.isEmpty()) {
+            TherapySession conflict = conflicts.get(0);
+            throw new BadRequestException("Schedule Conflict: You already have a '" + 
+                conflict.getProcedureName() + "' session scheduled at " + 
+                conflict.getScheduledDate().toString().replace("T", " "));
+        }
+
         TherapySession session = TherapySession.builder()
                 .therapyPlan(plan)
                 .procedureName(request.getProcedureName())
@@ -109,12 +128,33 @@ public class PractitionerService {
 
         session = therapySessionRepository.save(session);
 
-        // Send session reminder to patient
+        // Send session reminder & automated pre-procedure instructions
         notificationService.sendSessionReminder(
                 plan.getPatient(),
                 session.getProcedureName(),
                 session.getScheduledDate().toString()
         );
+        notificationService.sendPreProcedureInstructions(plan.getPatient(), session.getProcedureName());
+
+        return toSessionResponse(session);
+    }
+
+    public TherapySessionResponse updateSessionStatus(Long sessionId, SessionStatus status, Long practitionerId) {
+        TherapySession session = therapySessionRepository.findById(sessionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
+
+        if (!session.getTherapyPlan().getPractitioner().getId().equals(practitionerId)) {
+            throw new BadRequestException("You can only update sessions for your own therapy plans");
+        }
+
+        session.setStatus(status);
+        session = therapySessionRepository.save(session);
+
+        if (status == SessionStatus.COMPLETED) {
+            // Trigger automated post-procedure recovery tips
+            notificationService.sendPostProcedureTips(session.getTherapyPlan().getPatient(), session.getProcedureName());
+            notificationService.sendFeedbackReminder(session.getTherapyPlan().getPatient(), session.getProcedureName());
+        }
 
         return toSessionResponse(session);
     }
@@ -145,7 +185,10 @@ public class PractitionerService {
                 .upcomingSessions(upcoming.size())
                 .pendingFeedback(pendingFeedback)
                 .upcomingSessionList(upcoming.stream().map(this::toSessionResponse).collect(Collectors.toList()))
-                .recentPatients(patients.stream().sorted((a,b) -> b.getId().compareTo(a.getId())).limit(5).collect(Collectors.toList()))
+                .recentPatients(patients.stream()
+                        .sorted((a, b) -> Long.compare(b.getId(), a.getId()))
+                        .limit(5)
+                        .collect(Collectors.toList()))
                 .build();
     }
 
@@ -157,6 +200,7 @@ public class PractitionerService {
 
     public List<TherapyPlanResponse> getTherapyPlans(Long practitionerId) {
         return therapyPlanRepository.findByPractitionerId(practitionerId).stream()
+                .sorted((a, b) -> Long.compare(b.getId(), a.getId()))
                 .map(this::toTherapyPlanResponse)
                 .collect(Collectors.toList());
     }
@@ -170,7 +214,14 @@ public class PractitionerService {
                 .name(profile.getUser().getName())
                 .email(profile.getUser().getEmail())
                 .prakriti(profile.getPrakriti())
+                .age(profile.getAge())
+                .gender(profile.getGender())
+                .bloodGroup(profile.getBloodGroup())
+                .emergencyContact(profile.getEmergencyContact())
+                .medicalHistory(profile.getMedicalHistory())
                 .notes(profile.getNotes())
+                .practitionerId(profile.getPractitioner() != null ? profile.getPractitioner().getId() : null)
+                .practitionerName(profile.getPractitioner() != null ? profile.getPractitioner().getName() : "Unassigned")
                 .build();
     }
 

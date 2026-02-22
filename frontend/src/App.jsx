@@ -12,6 +12,7 @@ import CreateTherapyPlan from './pages/practitioner/CreateTherapyPlan'
 import ScheduleSession from './pages/practitioner/ScheduleSession'
 import FeedbackViewer from './pages/practitioner/FeedbackViewer'
 
+import PatientDashboard from './pages/patient/Dashboard'
 import MyTimeline from './pages/patient/MyTimeline'
 import SessionDetails from './pages/patient/SessionDetails'
 import SubmitFeedback from './pages/patient/SubmitFeedback'
@@ -23,7 +24,7 @@ const ProtectedRoute = ({ children, role }) => {
     const { user } = useAuth();
     if (!user) return <Navigate to="/login" />;
     if (role && user.role !== role) {
-        return <Navigate to={user.role === 'PRACTITIONER' ? '/dashboard' : '/timeline'} />;
+        return <Navigate to={user.role === 'PRACTITIONER' ? '/dashboard' : '/patient-dashboard'} />;
     }
     return children;
 };
@@ -48,6 +49,7 @@ function App() {
 
                     {/* Patient Routes */}
                     <Route element={<ProtectedRoute role="PATIENT"><DashboardLayout /></ProtectedRoute>}>
+                        <Route path="/patient-dashboard" element={<PatientDashboard />} />
                         <Route path="/timeline" element={<MyTimeline />} />
                         <Route path="/sessions" element={<SessionDetails />} />
                         <Route path="/submit-feedback" element={<SubmitFeedback />} />

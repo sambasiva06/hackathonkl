@@ -1,37 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import {
   Users,
-  Calendar,
-  CheckCircle2,
+  ClipboardList,
   Clock,
+  CheckCircle2,
+  ArrowUpRight,
   Plus,
-  ChevronRight,
-  TrendingUp
+  Calendar as CalendarNav,
+  CheckCircle,
+  MoreVertical
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { practitionerService } from '../../services/api';
 import Skeleton, { SkeletonCircle } from '../../components/Skeleton';
+import CalendarModule from '../../components/CalendarModule';
+import Sparkline from '../../components/Sparkline';
 
 const PractitionerDashboard = () => {
-  const [data, setData] = useState(null);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState('list');
+  const [completingId, setCompletingId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     document.title = 'Dashboard — AyurSutra';
     fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 30000); // Poll every 30s
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboardData = async () => {
-    setLoading(true);
     try {
       const resp = await practitionerService.getDashboard();
-      setData(resp.data);
+      setStats(resp.data);
     } catch (err) {
       console.error('Error fetching dashboard', err);
-      alert('Failed to load dashboard data.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCompleteSession = async (sessionId) => {
+    if (!window.confirm('Mark this session as completed? Automated recovery tips will be sent to the patient.')) return;
+
+    setCompletingId(sessionId);
+    try {
+      await practitionerService.updateSessionStatus(sessionId, 'COMPLETED');
+      await fetchDashboardData(); // Refresh stats and list
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error completing session');
+    } finally {
+      setCompletingId(null);
     }
   };
 
@@ -73,20 +93,20 @@ const PractitionerDashboard = () => {
     );
   }
 
-  const stats = [
-    { label: 'Total Patients', value: data?.totalPatients || 0, icon: Users, color: '#0d9488' },
-    { label: 'Upcoming Sessions', value: data?.upcomingSessions || 0, icon: Calendar, color: '#8b5cf6' },
-    { label: 'Completed Today', value: data?.completedSessions || 0, icon: CheckCircle2, color: '#10b981' },
-    { label: 'Pending Feedback', value: data?.pendingFeedback || 0, icon: Clock, color: '#f59e0b' },
+  const statsData = [
+    { label: 'Total Patients', value: stats?.totalPatients || 0, icon: Users, color: '#0d9488' },
+    { label: 'Upcoming Sessions', value: stats?.upcomingSessions || 0, icon: ClipboardList, color: '#8b5cf6' },
+    { label: 'Completed Today', value: stats?.completedSessions || 0, icon: CheckCircle2, color: '#10b981' },
+    { label: 'Pending Feedback', value: stats?.pendingFeedback || 0, icon: Clock, color: '#f59e0b' },
   ];
 
   return (
-    <div className="practitioner-dashboard">
+    <div className="practitioner-dashboard fade-in">
       <div className="stats-grid">
-        {stats.map((stat, i) => (
-          <div key={i} className="stat-card">
-            <div className="stat-icon" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>
-              <stat.icon size={24} />
+        {statsData.map((stat, i) => (
+          <div key={i} className="stat-card clean-card">
+            <div className="stat-icon" style={{ backgroundColor: `${stat.color}10`, color: stat.color }}>
+              <stat.icon size={22} />
             </div>
             <div className="stat-content">
               <p className="stat-label">{stat.label}</p>
@@ -97,226 +117,129 @@ const PractitionerDashboard = () => {
       </div>
 
       <div className="dashboard-grid">
-        <section className="dashboard-section main-sec">
+        <section className="dashboard-main clean-card">
           <div className="section-header">
-            <h3>Upcoming Sessions</h3>
-            <button className="text-btn" onClick={() => navigate('/schedule')}>View All</button>
+            <h2>Upcoming Sessions</h2>
+            <div className="view-toggles">
+              <button className={`view-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>List</button>
+              <button className={`view-btn ${view === 'calendar' ? 'active' : ''}`} onClick={() => setView('calendar')}>Calendar</button>
+            </div>
           </div>
-          <div className="session-list">
-            {data?.upcomingSessionList?.length > 0 ? (
-              data.upcomingSessionList.map((session) => (
-                <div key={session.id} className="session-item">
-                  <div className="session-time">
-                    <span className="time">{new Date(session.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    <span className="date">{new Date(session.scheduledDate).toLocaleDateString()}</span>
+
+          {view === 'calendar' ? (
+            <CalendarModule
+              events={stats?.upcomingSessionList?.map(s => ({ date: s.scheduledDate, title: `[${s.patientName}] ${s.procedureName}` }))}
+              onDateSelect={(date) => console.log('Selected:', date)}
+            />
+          ) : (
+            <div className="upcoming-list">
+              {stats?.upcomingSessionList?.length > 0 ? (
+                stats.upcomingSessionList.map(session => (
+                  <div key={session.id} className="session-card-mini clean-card">
+                    <div className="s-time">
+                      {new Date(session.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <div className="s-info">
+                      <strong>{session.procedureName}</strong>
+                      <span>{session.patientName}</span>
+                    </div>
+                    <div className="s-actions">
+                      <button
+                        className="btn btn-sm btn-outline btn-success"
+                        onClick={() => handleCompleteSession(session.id)}
+                        disabled={completingId === session.id}
+                      >
+                        {completingId === session.id ? '...' : <CheckCircle size={16} />}
+                        <span className="btn-text">Complete</span>
+                      </button>
+                    </div>
                   </div>
-                  <div className="session-details">
-                    <h4>{session.procedureName}</h4>
-                    <p>Patient: {session.patientName}</p>
-                  </div>
-                  <div className="session-phase-tag">{session.phase}</div>
-                  <ChevronRight className="chevron" size={20} />
-                </div>
-              ))
-            ) : (
-              <div className="empty-state">No sessions scheduled for today.</div>
-            )}
-          </div>
+                ))
+              ) : (
+                <div className="empty-state">No sessions scheduled for today.</div>
+              )}
+            </div>
+          )}
         </section>
 
-        <section className="dashboard-section side-sec">
+        <section className="dashboard-section side-sec clean-card">
           <div className="section-header">
             <h3>Recent Patients</h3>
             <button className="icon-btn-small" onClick={() => navigate('/patients')}><Plus size={18} /></button>
           </div>
           <div className="patient-mini-list">
-            {data?.recentPatients?.map((patient) => (
+            {stats?.recentPatients?.map((patient) => (
               <div
                 key={patient.id}
                 className="patient-mini-item clickable"
                 onClick={() => navigate('/plans', { state: { patientId: patient.userId } })}
               >
-                <div className="p-avatar">{patient.name[0]}</div>
+                <div className="p-avatar">{patient?.name?.[0] || '?'}</div>
                 <div className="p-info">
-                  <p className="p-name">{patient.name}</p>
-                  <p className="p-meta">{patient.prakriti || 'Prakriti not set'}</p>
+                  <p className="p-name">{patient?.name || 'Unknown'}</p>
+                  <p className="p-meta">{patient?.prakriti || 'Dosha not set'}</p>
                 </div>
-                <ChevronRight size={14} className="p-chevron" />
+                <Sparkline color={patient?.prakriti === 'Vata' ? '#60a5fa' : patient?.prakriti === 'Pitta' ? '#f87171' : '#fbbf24'} />
+                <ArrowUpRight size={14} className="p-chevron" />
               </div>
             ))}
           </div>
 
           <div className="cta-card">
-            <h4>Ready to start a new journey?</h4>
-            <p>Create a therapy plan for {data?.recentPatients?.[0]?.name || 'your recent patient'}.</p>
+            <h4>Panchakarma Protocol</h4>
+            <p>Ready to schedule? Check your availability on the interactive calendar.</p>
             <button
-              className="btn btn-primary btn-sm"
-              onClick={() => navigate('/plans', { state: { patientId: data?.recentPatients?.[0]?.userId } })}
+              className="btn btn-white btn-sm"
+              onClick={() => navigate('/schedule')}
+              style={{ width: '100%', marginTop: '0.5rem' }}
             >
-              Create Plan
+              Go to Scheduling
             </button>
           </div>
         </section>
       </div>
 
       <style>{`
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-          gap: 1.5rem;
-          margin-bottom: 2rem;
-        }
+        .practitioner-dashboard { padding-bottom: 2rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1.25rem; }
+        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+        .stat-label { font-size: 0.8125rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem; }
+        .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--text-main); }
 
-        .stat-card {
-          background: var(--bg-card);
-          padding: 1.5rem;
-          border-radius: var(--radius);
-          display: flex;
-          align-items: center;
-          gap: 1.25rem;
-          box-shadow: var(--shadow);
-        }
-
-        .stat-icon {
-          width: 52px;
-          height: 52px;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .stat-label {
-          font-size: 0.875rem;
-          color: var(--text-muted);
-          margin-bottom: 0.25rem;
-        }
-
-        .stat-value {
-          font-size: 1.5rem;
-          font-weight: 700;
-        }
-
-        .dashboard-grid {
-          display: grid;
-          grid-template-columns: 2fr 1fr;
-          gap: 2rem;
-        }
-
-        .dashboard-section {
-          background: var(--bg-card);
-          border-radius: var(--radius);
-          padding: 1.5rem;
-          box-shadow: var(--shadow);
-        }
-
-        .section-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1.5rem;
-        }
-
-        .section-header h3 {
-          font-size: 1.125rem;
-          font-weight: 600;
-        }
-
-        .session-item {
-          display: flex;
-          align-items: center;
-          padding: 1rem;
-          border-radius: 0.75rem;
-          background: var(--bg-main);
-          margin-bottom: 0.75rem;
-          gap: 1.25rem;
-          transition: transform 0.2s;
-        }
-
-        .session-item:hover {
-          transform: translateX(5px);
-        }
-
-        .session-time {
-          display: flex;
-          flex-direction: column;
-          min-width: 80px;
-        }
-
-        .session-time .time {
-          font-weight: 700;
-          color: var(--primary);
-        }
-
-        .session-time .date {
-          font-size: 0.75rem;
-          color: var(--text-muted);
-        }
-
-        .session-details h4 {
-          font-size: 1rem;
-          font-weight: 600;
-          margin-bottom: 0.25rem;
-        }
-
-        .session-details p {
-          font-size: 0.8125rem;
-          color: var(--text-muted);
-        }
-
-        .session-phase-tag {
-          margin-left: auto;
-          font-size: 0.75rem;
-          font-weight: 600;
-          padding: 0.25rem 0.625rem;
-          background: rgba(13, 148, 136, 0.1);
-          color: var(--primary);
-          border-radius: 1rem;
-        }
-
-        .chevron { color: var(--text-muted); }
-
-        .patient-mini-item {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          margin-bottom: 1rem;
-        }
-
-        .p-avatar {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: var(--border);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-          color: var(--text-muted);
-        }
-
-        .p-name { font-size: 0.9375rem; font-weight: 500; }
-        .p-meta { font-size: 0.75rem; color: var(--text-muted); }
-        .p-chevron { margin-left: auto; color: var(--text-muted); opacity: 0; transition: opacity 0.2s; }
-        .patient-mini-item.clickable { cursor: pointer; padding: 0.5rem; border-radius: 0.5rem; transition: background 0.2s; }
-        .patient-mini-item.clickable:hover { background: var(--bg-main); }
-        .patient-mini-item.clickable:hover .p-chevron { opacity: 1; }
-
-        .cta-card {
-          margin-top: 2rem;
-          background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-          padding: 1.25rem;
-          border-radius: var(--radius);
-          color: white;
-        }
-
-        .cta-card h4 { margin-bottom: 0.5rem; }
-        .cta-card p { font-size: 0.8125rem; margin-bottom: 1rem; opacity: 0.9; }
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        .dashboard-section, .dashboard-main { padding: 1.5rem; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
         
-        .btn-sm { padding: 0.5rem 1rem; font-size: 0.875rem; background: white; color: var(--primary); }
-        .btn-sm:hover { background: #f8fafc; color: var(--primary-hover); }
+        .view-toggles { display: flex; background: #f1f5f9; padding: 0.2rem; border-radius: 8px; }
+        .view-btn { padding: 0.4rem 1rem; font-size: 0.75rem; border-radius: 6px; font-weight: 700; border: none; background: transparent; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
+        .view-btn.active { background: white; color: var(--primary); box-shadow: var(--shadow-sm); }
 
-        .text-btn { color: var(--primary); font-size: 0.875rem; font-weight: 600; }
+        .session-card-mini { display: flex; align-items: center; padding: 1rem; margin-bottom: 0.75rem; gap: 1rem; border: 1px solid var(--border); }
+        .s-time { font-weight: 800; color: var(--primary); font-size: 0.875rem; min-width: 65px; }
+        .s-info { flex: 1; }
+        .s-info strong { display: block; font-size: 0.9375rem; color: var(--text-main); }
+        .s-info span { font-size: 0.8125rem; color: var(--text-muted); }
+        
+        .s-actions { display: flex; gap: 0.5rem; }
+        .btn-success { color: #059669 !important; border-color: #059669 !important; }
+        .btn-success:hover { background: #ecfdf5 !important; }
+        .btn-success .btn-text { margin-left: 0.4rem; }
+
+        .patient-mini-item { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.75rem; transition: all 0.2s; }
+        .patient-mini-item.clickable { cursor: pointer; }
+        .patient-mini-item.clickable:hover { background: #f8fafc; }
+        .p-avatar { width: 36px; height: 36px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--primary); border: 1px solid var(--border); }
+        .p-name { font-size: 0.875rem; font-weight: 700; color: var(--text-main); }
+        .p-meta { font-size: 0.75rem; color: var(--text-muted); }
+        
+        .cta-card { margin-top: 1.5rem; background: var(--primary); padding: 1.5rem; border-radius: var(--radius); color: white; }
+        .cta-card h4 { margin-bottom: 0.5rem; font-size: 1rem; font-weight: 700; }
+        .cta-card p { font-size: 0.8125rem; margin-bottom: 1rem; opacity: 0.9; line-height: 1.4; }
+        .btn-white { background: white; color: var(--primary); border: none; }
+        .btn-white:hover { background: #f0fdfa; }
+
+        .empty-state { padding: 3rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.875rem; background: #f8fafc; border-radius: var(--radius); border: 1px dashed var(--border); }
       `}</style>
     </div>
   );

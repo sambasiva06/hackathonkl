@@ -9,4 +9,7 @@ public interface PatientProfileRepository extends JpaRepository<PatientProfile, 
     Optional<PatientProfile> findByUserId(Long userId);
 
     boolean existsByUserId(Long userId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM PatientProfile p WHERE p.practitioner.id = :practitionerId")
+    java.util.List<PatientProfile> findByPractitionerId(@org.springframework.data.repository.query.Param("practitionerId") Long practitionerId);
 }

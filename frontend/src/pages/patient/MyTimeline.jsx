@@ -64,9 +64,9 @@ const MyTimeline = () => {
 
   return (
     <div className="patient-timeline-page fade-in">
-      <div className="overall-progress-card glass-card">
+      <div className="overall-progress-card">
         <div className="progress-header">
-          <h3>Overall Recovery Progress</h3>
+          <h3>My Recovery Progress</h3>
           <span className="percentage">{Math.round(progress?.completionPercentage || 0)}%</span>
         </div>
         <div className="progress-bar-container">
@@ -81,17 +81,16 @@ const MyTimeline = () => {
       </div>
 
       <div className="timeline-container">
-        {progress?.phases.map((phase, idx) => (
+        {progress?.phases?.map((phase, idx) => (
           <div key={phase.phase} className={`timeline-phase ${phase.total > 0 ? 'active' : 'inactive'}`}>
-            <div className="phase-marker">
-              {phase.percentage === 100 ? (
-                <div className="icon-wrap completed"><CheckCircle2 size={24} /></div>
-              ) : phase.total > 0 ? (
-                <div className="icon-wrap current"><Clock size={24} /></div>
-              ) : (
-                <div className="icon-wrap locked"><Circle size={24} /></div>
+            <div className="phase-marker-container">
+              <div className={`phase-line ${idx === 0 ? 'first' : ''}`}></div>
+              <div className={`phase-point ${phase.total > 0 ? 'completed' : 'pending'}`}>
+                {phase.total > 0 ? <Check size={16} /> : <div className="dot"></div>}
+              </div>
+              {idx < progress.phases.length - 1 && (
+                <div className={`phase-connector ${(progress?.phases?.[idx + 1]?.total || 0) > 0 ? 'completed' : ''}`}></div>
               )}
-              {idx < progress.phases.length - 1 && <div className="connector"></div>}
             </div>
 
             <div className="phase-content">
@@ -103,11 +102,16 @@ const MyTimeline = () => {
               </div>
 
               {phase.total > 0 && (
-                <div className="phase-sessions-mini">
-                  {phase.sessions.slice(0, 3).map(s => (
-                    <div key={s.id} className="mini-session-tag">
-                      {s.status === 'COMPLETED' ? <CheckCircle2 size={12} /> : <Circle size={12} />}
-                      <span>{s.procedureName}</span>
+                <div className="phase-sessions">
+                  {phase?.sessions?.map(session => (
+                    <div key={session.id} className="session-mini-card">
+                      <div className="s-icon">
+                        {session.status === 'COMPLETED' ? <CheckCircle2 size={14} color="#10b981" /> : <Clock size={14} color="#6b7280" />}
+                      </div>
+                      <div className="s-info">
+                        <p className="s-name">{session.procedureName || 'Procedure'}</p>
+                        <p className="s-date">{session.scheduledDate ? new Date(session.scheduledDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'TBD'}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -124,7 +128,10 @@ const MyTimeline = () => {
 
       <style>{`
         .overall-progress-card {
-          max-width: 100%;
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          box-shadow: var(--shadow);
           margin-bottom: 3rem;
           padding: 2rem;
         }
@@ -188,9 +195,9 @@ const MyTimeline = () => {
           box-shadow: var(--shadow);
         }
 
-        .icon-wrap.completed { color: var(--secondary); border: 2px solid var(--secondary); }
-        .icon-wrap.current { color: var(--primary); border: 2px solid var(--primary); }
-        .icon-wrap.locked { color: var(--text-muted); border: 2px solid var(--border); }
+        .icon-wrap.completed { color: #059669; background: #ecfdf5; border: 1px solid #d1fae5; }
+        .icon-wrap.current { color: var(--primary); background: #f0fdfa; border: 1px solid #ccfbf1; }
+        .icon-wrap.locked { color: var(--text-muted); background: #f8fafc; border: 1px solid var(--border); }
 
         .connector {
           width: 2px;
